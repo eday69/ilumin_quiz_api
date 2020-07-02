@@ -1,0 +1,55 @@
+.mat-card{
+  max-width: 1000px;
+  min-width: 80vw;
+  max-height: 80vh;
+  min-height: 50vh;
+  margin: 25px auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.mat-card-header{
+  justify-content: center /* for center*/
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.card-form {
+  display: flex;
+  flex-direction: row;
+}
+
+.pickpromt {
+  width: 100%;
+}
+
+.student-form {
+  min-width: 150px;
+  max-width: 100%;
+  width: 100%;
+}
+
+.note {
+  font-size: 0.7rem;
+}
+
+@media only screen and (max-width: 600px) {
+  .pickpromt {
+    width: 200px;
+  }
+
+  .mat-card {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    min-width: 100%;
+    min-height: 100%;
+    margin: 0px;
+    overflow: auto;
+  }
+}

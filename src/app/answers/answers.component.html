@@ -1,0 +1,8 @@
+<div class="container">
+  <div *ngFor="let question of listQ; let idx = index;">
+    {{ question.label }} {{ question.content }}
+    <div *ngFor="let option of question.options; let jdx = index">
+      {{ option.option }} {{ student[idx][jdx] != null ? 'SELECTED': '' }}
+    </div>
+  </div>
+</div>

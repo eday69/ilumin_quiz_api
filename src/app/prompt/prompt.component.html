@@ -1,0 +1,22 @@
+<div class="container">
+  <div class="prompt-header mt-2 mb-5 text-bold">
+    {{ prompt.value.content }}
+  </div>
+  <div class="row" [formGroup]="prompt">
+    <div class="col col-md-6 col-12">
+      <img class="promptimage" src="assets/images/prompt{{ question + 1 }}.png">
+    </div>
+    <div class="col col-md-6 col-sm-12 mt-3 pr-0">
+      <div class="row" *ngFor="let item of labels; let j = index" [class.is-invalid]="invalid">
+        <mat-checkbox class="border-bottom" [formControl]="options.get([j])">
+            <span class="text-wrap">
+                {{ item.option }}
+            </span>
+        </mat-checkbox>
+      </div>
+      <div class="invalid-feedback" role="alert">
+        Question # {{ question }} - At least one answer must be selected.
+      </div>
+    </div>
+  </div>
+</div>
