@@ -47,22 +47,78 @@ function getTop4Answers(answers) {
     return a;
 }
 
+const findAPrompt = async function(answer) {
+    sql = 'SELECT qq.question_name, qpp.intro, qpp.prompt ' +
+          'FROM quiz_prompts_prompt as qpp ' +
+          'INNER JOIN quiz_prompts AS qp ON qp.id = qpp.quiz_prompts_id ' +
+          'INNER JOIN quiz_question AS qq ON qq.id = qp.quiz_question_id ' +
+          'WHERE qq.id = ? ';
+
+    try {
+      const item_prompt = await helpers.runQuery(db, sql, [answer]);
+      info = [];
+      item_prompt.forEach(p => {
+        info.push({
+          name: p.question_name,
+          intro: p.intro,
+          prompt: p.prompt
+        })
+      });
+      return [];
+    } catch(e) {
+      console.log('We have an error in findAPrompt');
+    }
+}
+
+const findAnswers = async function(selected) {
+    sql = 'SELECT qq.id, qq.question_name, qp.intro, qp.extra ' +
+          'FROM  quiz AS q ' +
+          'INNER JOIN quiz_question AS qq ON qq.quiz_id = q.id ' +
+          'INNER JOIN quiz_prompts AS qp ON qp.quiz_question_id = qq.id ' +
+          'INNER JOIN quiz_prompts_prompt qpp ON qpp.quiz_prompts_id = qp.id ' +
+          'WHERE  q.id = 1 ' +
+          '  AND  qq.question_num in (?) ' +
+          'ORDER BY FIELD(qq.question_num, ?) ';
+
+    try {
+      const found = await helpers.runQuery(db, sql, [selected, selected]);
+      data = [];
+      for (const item of found) {
+          const listPrompts = await findAPrompt(item.id);
+          console.log('pushing ', item.id, listPrompts);
+          data.push({
+              name: item.question_name,
+              intro: item.intro,
+              prompts: listPrompts,
+              extra: item.extra,
+          });
+          console.log('data ', data);
+      };
+
+      return data;
+    } catch(e) {
+      console.log('We have an error in findAnswers');
+    }
+}
+
 const getPrompt = async function(token) {
     sql = 'SELECT first_name, last_name, answers ' +
-          'FROM quiz ' +
+          'FROM quiz_answers ' +
           'WHERE token = ? ';
-    // salt = bcrypt.genSaltSync(10);
     try {
       const results = await helpers.runQuery(db, sql, [token]);
 
-      results.forEach(function(res) {
-        console.log('Results', res);
-        const answers = getTop4Answers(res.answers)
+      for (const res of results) {
+          console.log('Results', res);
+          const answers = getTop4Answers(res.answers)
 
-        console.log('Occurrance', answers);
-      });
+          console.log('answers', answers);
+          const final = await findAnswers(answers);
 
-      return await helpers.prepareResponse(200, [ { token }]);
+          console.log('Occurrance', answers, final);
+      };
+      console.log('Results done', final);
+      return await helpers.prepareResponse(200, final);
 
     } catch(e) {
       throw e;

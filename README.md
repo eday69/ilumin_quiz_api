@@ -21,5 +21,5 @@ Required values (set up to according environment)
  API_DB_PORT=3306
  API_DB_USER=root
  API_DB_PASSWORD=root
- API_DB_NAME=colleges
+ API_DB_NAME=promptQuiz
 ```
