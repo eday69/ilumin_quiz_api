@@ -1,8 +1,52 @@
-<div class="container">
-  <div *ngFor="let question of listQ; let idx = index;">
-    {{ question.label }} {{ question.content }}
-    <div *ngFor="let option of question.options; let jdx = index">
-      {{ option.option }} {{ student[idx][jdx] != null ? 'SELECTED': '' }}
+<div class="container" *ngIf="showContent">
+    <div>
+      <p>
+        <small>Hope you enjoyed the quiz! Make a copy of your results and answers--so you can
+          refer to them as you brainstorm for your college essays! Learn more tips and insights
+          for college admissions at Ilumineducation.com!
+        </small>
+      </p>
+      <div class="name-container mb-2 pb-0">
+          <p>{{ studentName }}'s Results</p>
+          <button  mat-icon-button (click)="printInfo()">
+            <mat-icon>print</mat-icon>
+          </button>
+      </div>
     </div>
-  </div>
+    <div class="mb-3"  *ngFor="let prompt of prompts; let idx = index">
+        <div class="prompt-row row">
+            <div class="image-container col col-md-4 col-12">
+              <img class="promptimage" src="assets/images/prompt{{ idx + 1 }}.png">
+            </div>
+            <div class="col col-md-8 col-12">
+                 <h4>{{ prompt.name }}</h4>
+                 <span>{{ prompt.intro }}:</span>
+                 <div *ngFor="let p of prompt.prompts">
+                     <div><em>{{ p.name }}</em></div>
+                     <div *ngIf="p.intro"> {{ p.intro }}</div>
+                     <div><span><strong>{{ p.prompt }}</strong></span></div>
+                 </div>
+                 <span>{{ prompt.extra }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="detailed-report">
+        <div>
+           <p>Detailed Report</p>
+        </div>
+        <div class="col col-md-8 col-12 border mb-1" *ngFor="let question of listQ; let idx = index;">
+            <div class="col col-md-12 col-12">
+              {{ question.label }}) <strong>{{ question.content }}</strong>
+            </div>
+            <div  class="col col-md-12 offset-md-1 offset-sm-1 col-12" *ngFor="let option of question.options; let jdx = index">
+              <small [ngClass]="{'font-weight-bold' :  (student[idx] && student[idx][jdx] != null) }">
+                {{ option.option }} <span class="text-success" *ngIf="student[idx] && student[idx][jdx] != null">SELECTED</span>
+              </small>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div *ngIf="!tokenOk">
+  Mmm, link seems to be broken, please check !!
 </div>
