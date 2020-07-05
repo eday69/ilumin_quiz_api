@@ -1,40 +1,93 @@
 let db = require('../../helpers/db.js');
 let build = require('./build');
 let helpers = require('../../helpers/common');
-// let bcrypt = require('bcrypt');
 let crypto = require('crypto');
-// let nodemailer = require('nodemailer');
+let nodemailer = require('nodemailer');
 
-const savePrompt = async function(body) {
-    sql = 'INSERT INTO quizzes ' +
- 				  '(first_name, last_name, email, highschool, city, year_graduate, ' +
+
+function sendResults(email, name, token) {
+    try {
+      // Send email
+      var transporter = nodemailer.createTransport({
+          service: 'gmail',
+          // host: 'smtp.gmail.com',
+          // port: 587,
+          // secure: false,
+          // port: 465,
+          auth: {
+            user: process.env.EMAIL_TRANSPORTER,
+            pass: process.env.EMAIL_TRANSPORTER_PWD
+          }
+      });
+
+      let host = process.env.API_DB_HOST;
+      let url = '';
+      switch (host) {
+        case "localhost":
+          url = 'http://localhost:4200/answers/';
+          break;
+        case "13.58.133.179":
+          url = 'http://18.218.212.36:4201/answers/';
+          break;
+        case "52.14.14.234":
+          url = 'http://18.216.159.25/answers/';
+          break;
+      }
+      var quiz_date = new Date().toJSON().slice(0,10).replace(/-/g,'/');
+
+      var mailOptions = {
+          from: process.env.EMAIL_FROM,
+          to: email,
+          subject: 'You have completed: Which 4 UC Prompts Are Best For You?',
+          text: 'You have submitted:\n\n' +
+          'Which 4 UC Prompts Are Best For You?\n\n' +
+          'Name: ' + name + '\n\n' +
+          'Date Submitted: ' + quiz_date + '\n\n' +
+          'Your result: ' + url + token
+      }
+      let info = transporter.sendMail(mailOptions);
+
+    } catch(e) {
+      throw e;
+    }
+}
+
+const savePrompt = async function(quizid, student, answers) {
+    sql = 'INSERT INTO quiz_answers ' +
+ 				  '(quiz_id, first_name, last_name, email, highschool, city, year_graduate, ' +
           'answers, token ) ' +
-          'VALUES (?, ?, ?, ?, ?, ?, ?, ?) ';
+          'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ';
     try {
       var token = crypto.randomBytes(64).toString('hex');
       const results = await helpers.runQuery(db, sql,
         [
-          body.firstname,
-          body.lastname,
-          body.email,
-          body.highschool,
-          body.city,
-          body.yeargraduate,
-          body.answers,
+          quizid,
+          student.firstname,
+          student.lastname,
+          student.email,
+          student.highschool,
+          student.city,
+          student.yeargraduate,
+          answers,
           token
         ]);
+        var name = student.firstname + ' ' + student.lastname;
+        sendResults(student.email, name, token);
 
-        return await helpers.prepareResponse(200, [ { token }]);
+        return await helpers.prepareResponse(200, { token });
 
       } catch(e) {
         throw e;
       }
 }
 
-function getTop4Answers(answers) {
+function getTop4Prompts(answers) {
     const answerArray = [].concat.apply([], JSON.parse(answers));
     var s = answerArray.reduce(function(m, v){
-      m[v] = (m[v] || 0) + 1; return m;
+      if (v) {
+          m[v] = (m[v] || 0) + 1;
+      }
+      return m;
     }, {});
 
     var a = [];
@@ -52,19 +105,16 @@ const findAPrompt = async function(answer) {
           'FROM quiz_prompts_prompt as qpp ' +
           'INNER JOIN quiz_prompts AS qp ON qp.id = qpp.quiz_prompts_id ' +
           'INNER JOIN quiz_question AS qq ON qq.id = qp.quiz_question_id ' +
-          'WHERE qq.id = ? ';
+          'WHERE qq.id = ? ' +
+          '  AND qpp.quiz_question_id = qq.id ';
 
     try {
       const item_prompt = await helpers.runQuery(db, sql, [answer]);
       info = [];
       item_prompt.forEach(p => {
-        info.push({
-          name: p.question_name,
-          intro: p.intro,
-          prompt: p.prompt
-        })
+        info.push(build.build_prompt(p))
       });
-      return [];
+      return info;
     } catch(e) {
       console.log('We have an error in findAPrompt');
     }
@@ -75,7 +125,6 @@ const findAnswers = async function(selected) {
           'FROM  quiz AS q ' +
           'INNER JOIN quiz_question AS qq ON qq.quiz_id = q.id ' +
           'INNER JOIN quiz_prompts AS qp ON qp.quiz_question_id = qq.id ' +
-          'INNER JOIN quiz_prompts_prompt qpp ON qpp.quiz_prompts_id = qp.id ' +
           'WHERE  q.id = 1 ' +
           '  AND  qq.question_num in (?) ' +
           'ORDER BY FIELD(qq.question_num, ?) ';
@@ -85,14 +134,7 @@ const findAnswers = async function(selected) {
       data = [];
       for (const item of found) {
           const listPrompts = await findAPrompt(item.id);
-          console.log('pushing ', item.id, listPrompts);
-          data.push({
-              name: item.question_name,
-              intro: item.intro,
-              prompts: listPrompts,
-              extra: item.extra,
-          });
-          console.log('data ', data);
+          data.push(build.build_prompts(item, listPrompts));
       };
 
       return data;
@@ -108,24 +150,23 @@ const getPrompt = async function(token) {
     try {
       const results = await helpers.runQuery(db, sql, [token]);
 
+      let data = {};
       for (const res of results) {
-          console.log('Results', res);
-          const answers = getTop4Answers(res.answers)
+          const top = getTop4Prompts(res.answers)
+          const prompts = await findAnswers(top);
+          const quizData = await getQuizData(1);
 
-          console.log('answers', answers);
-          const final = await findAnswers(answers);
-
-          console.log('Occurrance', answers, final);
+          data = build.build_answer(prompts, res, quizData, top);
       };
-      console.log('Results done', final);
-      return await helpers.prepareResponse(200, final);
+
+      return Object.keys(data).length === 0 && data.constructor === Object ? await helpers.prepareResponse(204, []) : await helpers.prepareResponse(200, data);
 
     } catch(e) {
       throw e;
     }
 }
 
-const getQuiz = async function(quiz) {
+const getQuizData = async function(quiz) {
     sql = 'SELECT qq.question_num, qq.question_name, qq.label, qq.content, ' +
 	        'GROUP_CONCAT(CONCAT_WS("|^|", qqo.name, qqo.prompt_ref) separator "|#|") as options ' +
           'FROM quiz q ' +
@@ -141,12 +182,16 @@ const getQuiz = async function(quiz) {
         results.forEach(function(res) {
             data.push(build.build_question(res));
         });
-        return await helpers.prepareResponse(200, data);
+        return data;
     } catch(e) {
       throw e;
     }
 }
 
+const getQuiz = async function(quiz) {
+    const data = await getQuizData(quiz);
+    return await helpers.prepareResponse(200, data);
+}
 
 module.exports = {
   getPrompt,
