@@ -14,7 +14,7 @@ import {MatHorizontalStepper} from '@angular/material';
 
 export class PromptComponent implements OnInit {
   @Input() prompt: FormGroup;
-  @Input() labels: [ { option: '', prompt: 0 }];
+  @Input() labels: { content: '', options: [] };
   @Input() question: number;
   @Input() invalid: boolean;
 

@@ -1,12 +1,11 @@
 <form [formGroup]="form" *ngIf="!loading">
-    <mat-horizontal-stepper formArrayName="questions" linear>
-      <mat-step [label]="quiz[idx].label"
-                *ngFor="let question of questions?.controls; let idx = index"
+    <mat-horizontal-stepper formArrayName="questions" labelPosition="bottom" linear>
+      <mat-step *ngFor="let question of questions?.controls; let idx = index"
                 [formGroupName]="idx"
                 errorMessage="Name is required." >
         <div >
           <app-prompt [prompt]="questions.get([idx])"
-                      [labels]="quiz[idx].options"
+                      [labels]="quiz[idx]"
                       [question]="idx"
                       [invalid]="invalid">
           </app-prompt>
@@ -20,41 +19,23 @@
       </mat-step>
       <mat-step>
         <ng-template matStepLabel>Done</ng-template>
-        <p>You are now done.</p>
-        <div>
-          <button mat-button  (click)="previousStep()">Back</button>
-          <button mat-button  (click)="onSubmit()">Submit</button>
+        <p>Excellent, you have completed que Quiz.</p>
+        <p>To complete the process, please press the Send Results button.
+          You will go to the results page and also, receive by email the same results.
+        </p>
+        <div class="final-buttons">
+          <button type="submit" class="btn btn-info btn-md" (click)="previousStep()">
+            Back
+          </button>
+
+          <button type="submit" class="btn btn-primary btn-md" (click)="onSubmit()">
+            Send Results
+          </button>
+
         </div>
       </mat-step>
 
     </mat-horizontal-stepper>
 
 </form>
-
-<!--
-<form [formGroup]="form">
-    <mat-horizontal-stepper formArrayName="questions" linear>
-      <mat-step [label]="questions.get([idx]).value.label"
-                *ngFor="let question of questions?.controls; let idx = index"
-                [formGroupName]="idx">
-        <app-prompt [prompt]="questions.get([idx])"
-                    [question]="idx">
-        </app-prompt>
-        <div class="prompt-buttons d-flex flex-row-reverse justify-content-between mt-5">
-          <button type="button" class="btn btn-success" (click)="nextStep()">Next</button>
-          <button type="button" class="btn btn-secondary" (click)="previousStep()" *ngIf="idx>0">Back</button>
-        </div>
-      </mat-step>
-      <mat-step>
-        <ng-template matStepLabel>Done</ng-template>
-        <p>You are now done.</p>
-        <div>
-          <button mat-button  (click)="previousStep()">Back</button>
-        </div>
-      </mat-step>
-    </mat-horizontal-stepper>
-    <button mat-button  (click)="test()">Test</button>
-
-</form>
--->
 
