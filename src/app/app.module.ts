@@ -30,6 +30,10 @@ const  appRoutes: Routes  = [
     component: QuestionsComponent,
   },
   {
+    path: 'answers/:token',
+    component: AnswersComponent,
+  },
+  {
     path: 'answers',
     component: AnswersComponent,
   }

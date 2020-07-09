@@ -1,0 +1,23 @@
+.promptimage {
+  max-height: 200px;
+  max-width: 100%;
+}
+
+.image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.detailed-report {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.name-container {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid black;
+}

@@ -1,9 +1,13 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
-import {FormArray, FormBuilder, FormControl, FormGroup, ValidatorFn} from '@angular/forms';
-import { listAnswers } from './listAnswers';
-import { MatHorizontalStepper, MatStepper } from '@angular/material';
-import {DataService} from '../data.service';
-import {Router} from '@angular/router';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormArray, FormBuilder, FormGroup, ValidatorFn } from '@angular/forms';
+import { MatHorizontalStepper } from '@angular/material';
+import { DataService } from '../data.service';
+import { Router } from '@angular/router';
+
+class QuizOption {
+  option: string;
+  prompt: number;
+}
 
 @Component({
   selector: 'app-questions',
@@ -20,17 +24,23 @@ export class QuestionsComponent implements OnInit {
   ) { }
 
   public form: FormGroup = new FormGroup({});
-  answer = listAnswers;
   invalid = false;
   studentData: {};
   quiz: [{
     label: '',
+    content: '',
     options: []
   }];
+
   loading = true;
 
   ngOnInit() {
     this.studentData = this.dataService.studentData;
+
+    if (this.studentData === undefined) {
+        this.router.navigate(['/quiz']);
+    }
+
     this.dataService.getQuiz(1).subscribe(
         res => {
           this.loading = false;
@@ -39,7 +49,6 @@ export class QuestionsComponent implements OnInit {
             questions: this.fb.array([])
           });
           this.buildQuestions(this.quiz);
-          console.log('We got', this.studentData, this.questions, this.form);
         }
     );
   }
@@ -91,7 +100,6 @@ export class QuestionsComponent implements OnInit {
       return null;
     };
   }
-  // END TEST
 
   nextStep() {
     if (this.isValid(this.stepper.selectedIndex)) {
@@ -107,7 +115,6 @@ export class QuestionsComponent implements OnInit {
   }
 
   isValid(idx) {
-    return true;
     if ((typeof idx !== 'undefined') && this.stepper && (this.stepper.selectedIndex === idx)) {
       return !this.questions.get([idx]).invalid;
     }
@@ -116,60 +123,21 @@ export class QuestionsComponent implements OnInit {
 
 
   onSubmit() {
-    // console.log('data orig', this.data, this.data.map(qs => qs.options));
-    // const calc = this.data.map((qs, qi) => qs.options.map(
-    //   (q, qIdx) => {
-    //     return this.questions.get([qi]).get('options')['controls'][qIdx].value ? q.prompt : null;
-    //   }
-    // ));
-    const answers = [
-      [4, 3, 4, 2, null, null, null, null, null, null, null],
-      [6, 3, 4, 6, null, null, null, null, null, null, null],
-      [6, 3, 6, 6, null, null, null, null],
-      [1, 1, 1, 7, null, null, null],
-      [1, 7, 7, 1, null, null, null, null],
-      [2, 3, 7, 7, null, null, null, null, null],
-      [2, 2, 5, 5, null, null, null, null]
-    ];
+    const answers = this.quiz.map((qs, qi) => qs.options.map(
+      (q: QuizOption, qIdx) => {
+        return this.questions.get([qi]).get('options')['controls'][qIdx].value ? q.prompt : null;
+      }
+    ));
 
     const data = {
-      answers,
+      answers: JSON.stringify(answers),
+      quizid: 1,
       student: this.studentData
     };
 
     this.dataService.postPrompt(data)
       .subscribe(res => {
-        this.dataService.token = res.results.data.token;
-        this.router.navigate(['/results']);
+        this.router.navigate(['/answers/' + res.results.data.token]);
       });
-
-    console.log('json', answers, JSON.stringify(answers));
-
-    const calcFlat = [].concat.apply([], answers);
-    const countOccur = calcFlat.reduce((acc, curr) => {
-      if (typeof acc[curr] === 'undefined') {
-        acc[curr] = 1;
-      } else {
-        acc[curr] += 1;
-      }
-
-      return acc;
-    }, {});
-    console.log('answer', this.answer[Object.keys(countOccur)[0]]);
-
-    // countOccur.forEach((item) => {
-    //   console.log('Selected', item);
-    //   // console.log('Answer', answer[item])
-    // });
-    console.log('times', countOccur);
-    // console.log('data', this.data.filter(
-    //   (q, qIdx) => this.questions.get([qIdx]).get('options')['controls'].some(
-    //     (control, controlIdx) => {
-    //       console.log('in some', qIdx, controlIdx, control.value);
-    //       return control.value;
-    //     })));
-
-
-    alert('Submitted');
   }
 }

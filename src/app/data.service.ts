@@ -15,12 +15,13 @@ export class DataService extends ApiService {
     return this.makeRequest(url, HTTP_GET, this.buildRequestOptions());
   }
 
-  getPrompt(id, data): Observable<any> {
-    const url = '/prompt/' + id;
-    return this.makeRequest(url, HTTP_PUT, this.buildRequestOptions(), data);
+  getPrompt(token): Observable<any> {
+    const url = '/prompt/' + token;
+    return this.makeRequest(url, HTTP_GET, this.buildRequestOptions(), token);
   }
 
   postPrompt(data): Observable<any> {
+    console.log('Data send', data);
     const url = '/prompt/';
     return this.makeRequest(url, HTTP_POST, this.buildRequestOptions(), data);
   }

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { listQuestions } from '../questions/listQuestions';
-import { listAnswers } from '../questions/listAnswers';
+import { ActivatedRoute } from '@angular/router';
+import { DataService } from '../data.service';
 
 @Component({
   selector: 'app-answers',
@@ -9,21 +9,53 @@ import { listAnswers } from '../questions/listAnswers';
 })
 export class AnswersComponent implements OnInit {
 
-  constructor() { }
+  tokenOk = '';
+  showContent = false;
+  student = [];
+  studentName = '';
+  prompts = [];
+  listQ = [];
 
-  student = [
-    [4,3,4,2,null,null,null,null,null,null,null],
-    [6,3,4,6,null,null,null,null,null,null,null],
-    [6,3,6,6,null,null,null,null],
-    [1,1,1,7,null,null,null],
-    [1,7,7,1,null,null,null,null],
-    [2,3,7,7,null,null,null,null,null],
-    [2,2,5,5,null,null,null,null]
-  ];
-  listAns = listAnswers;
-  listQ = listQuestions;
+  constructor(
+    private route: ActivatedRoute,
+    private dataService: DataService
+  ) {
+    this.route.params.subscribe(params => {
+      this.tokenOk = '';
+      if (params.hasOwnProperty('token')) {
+        this.tokenOk = params.token;
+        console.log('Token found', this.tokenOk);
+        this.getAnswers(this.tokenOk);
+      } else {
+        console.log('Token not found', params);
+      }
+    });
+  }
+
+  getAnswers(token) {
+    this.dataService.getPrompt(token)
+      .subscribe(
+        res => {
+          if (res.status === 200) {
+            this.showContent = true;
+            this.student = JSON.parse(res.results.data.answers);
+            this.studentName = res.results.data.name;
+            this.prompts = res.results.data.prompt;
+            this.listQ = res.results.data.quizData;
+          }
+
+          console.log('prompts', this.student, this.prompts, this.listQ);
+        },
+        err => {
+          this.showContent = true;
+        }
+      );
+  }
+
+  printInfo() {
+    window.print();
+  }
 
   ngOnInit(): void {
   }
-
 }
