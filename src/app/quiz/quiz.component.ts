@@ -17,7 +17,7 @@ export class QuizComponent {
       email: new FormControl('', [Validators.required, Validators.email]),
       highschool: new FormControl('', [Validators.required, Validators.maxLength(100)]),
       city: new FormControl('', [Validators.required, Validators.maxLength(100)]),
-      yeargraduate: new FormControl('', [Validators.required, this.rangeEmptyOkValidator(2000, (new Date()).getFullYear())]),
+      yeargraduate: new FormControl('', [Validators.required, this.rangeEmptyOkValidator(2000, (new Date()).getFullYear() + 2)]),
     });
 
   constructor(

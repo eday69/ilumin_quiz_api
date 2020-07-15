@@ -38,9 +38,9 @@
             <div class="col col-md-12 col-12">
               {{ question.label }}) <strong>{{ question.content }}</strong>
             </div>
-            <div  class="col col-md-12 offset-md-1 offset-sm-1 col-12" *ngFor="let option of question.options; let jdx = index">
-              <small [ngClass]="{'font-weight-bold' :  (student[idx] && student[idx][jdx] != null) }">
-                {{ option.option }} <span class="text-success" *ngIf="student[idx] && student[idx][jdx] != null">SELECTED</span>
+            <div  class="col col-md-11 offset-md-1 offset-sm-1 col-12 pr-1" *ngFor="let option of question.options; let jdx = index">
+              <small [ngClass]="{'font-weight-bold' :  (student[idx] && (student[idx][jdx] === option.prompt)) }">
+                {{ option.option }} <span class="text-success" *ngIf="student[idx] && (student[idx][jdx] === option.prompt)">SELECTED</span>
               </small>
             </div>
         </div>
