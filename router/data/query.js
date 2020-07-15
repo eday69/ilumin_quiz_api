@@ -168,13 +168,16 @@ const getPrompt = async function(token) {
 
 const getQuizData = async function(quiz) {
     sql = 'SELECT qq.question_num, qq.question_name, qq.label, qq.content, ' +
-	        'GROUP_CONCAT(CONCAT_WS("|^|", qqo.name, qqo.prompt_ref) separator "|#|") as options ' +
+          '(SELECT GROUP_CONCAT(CONCAT_WS("|^|", qqo.name, qqo.prompt_ref) separator "|#|") ' +
+          'FROM quiz_question_options qqo  ' +
+          'WHERE qqo.quiz_id = q.id AND qqo.quiz_question_id = qq.id  ' +
+          'ORDER BY qqo.id ASC) as options ' +
           'FROM quiz q ' +
           'INNER JOIN quiz_question qq ON qq.quiz_id = q.id ' +
           'INNER JOIN quiz_question_options qqo ON qqo.quiz_id = q.id ' +
           '   AND qqo.quiz_question_id = qq.id ' +
           'WHERE q.id = ? ' +
-          'GROUP BY qq.question_num, qq.question_name, qq.label, qq.content' ;
+          'GROUP BY qq.question_num, qq.question_name, qq.label, qq.content, options' ;
 
     try {
         const results = await helpers.runQuery(db, sql, [quiz]);
