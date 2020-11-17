@@ -12,9 +12,6 @@ import { QuestionsComponent } from './questions/questions.component';
 import { PromptComponent } from './prompt/prompt.component';
 import { AnswersComponent } from './answers/answers.component';
 
-// import { AppRoutingModule } from './app-routing.module';
-
-
 const  appRoutes: Routes  = [
   {
     path:  '',
@@ -36,6 +33,10 @@ const  appRoutes: Routes  = [
   {
     path: 'answers',
     component: AnswersComponent,
+  },
+  {
+    path:  '**',
+    redirectTo:  '/quiz'
   }
 ];
 
